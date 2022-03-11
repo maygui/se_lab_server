@@ -14,7 +14,7 @@ Download your IDE of choice: (e.g., [Eclipse](http://www.eclipse.org/downloads/)
 1. File -> Open... -> SoPra Server Template
 2. Accept to import the project as a `gradle project`
 
-To build right click the `build.gradle` file and choose `Run Build`
+To build right click the `build.gradle` file and choose `Run Build` .. test
 
 ### VS Code
 The following extensions will help you to run it more easily:
