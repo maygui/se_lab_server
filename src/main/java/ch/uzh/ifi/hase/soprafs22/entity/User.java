@@ -1,9 +1,11 @@
 package ch.uzh.ifi.hase.soprafs22.entity;
 
 import ch.uzh.ifi.hase.soprafs22.constant.UserStatus;
+import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * Internal User Representation
@@ -31,14 +33,22 @@ public class User implements Serializable {
     @Column(nullable = false, unique = true)
     private String username;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String token;
 
     @Column(nullable = false)
     private UserStatus status;
+
+    @Temporal(TemporalType.DATE)
+    private Date birthday;
+
+    @CreationTimestamp
+    @Column(nullable = false)
+    @Temporal(TemporalType.DATE)
+    private Date creationDate;
 
     public Long getId() {
         return id;
@@ -86,5 +96,21 @@ public class User implements Serializable {
 
     public void setStatus(UserStatus status) {
         this.status = status;
+    }
+
+    public Date getBirthday() {
+        return birthday;
+    }
+
+    public void setBirthday(Date birthday) {
+        this.birthday = birthday;
+    }
+
+    public Date getCreationDate() {
+        return creationDate;
+    }
+
+    public void setCreationDate(Date creationDate) {
+        this.creationDate = creationDate;
     }
 }

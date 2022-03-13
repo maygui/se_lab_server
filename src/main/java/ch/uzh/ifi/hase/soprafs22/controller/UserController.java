@@ -76,21 +76,18 @@ public class UserController {
     @PostMapping("/users/logout")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public UserGetDTO logoutUser(@RequestBody UserPostDTO userPostDTO) {
+    public void logoutUser(@RequestBody UserPostDTO userPostDTO) {
         // convert API user to internal representation
         User loggedIn = DTOMapper.INSTANCE.convertUserPostDTOtoEntity(userPostDTO);
 
         // log out user
-        User loggedOut = userService.logOut(loggedIn);
-
-        // convert internal representation of user back to API
-        return DTOMapper.INSTANCE.convertEntityToUserGetDTO(loggedOut);
+        userService.logOut(loggedIn);
     }
 
     @GetMapping("/users/{userId}")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public UserGetDTO getID(@PathVariable(value = "userId") Long userId) {
+    public UserGetDTO getID(@PathVariable Long userId) {
         // get user by ID
         User userById = userService.getUser(userId);
 
@@ -101,13 +98,11 @@ public class UserController {
     @PutMapping("/users/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @ResponseBody
-    public void updateUser(@RequestBody UserPostDTO userPostDTO, @PathVariable(value="userID") Long userID) {
+    public void updateUser(@RequestBody UserPostDTO userPostDTO, @PathVariable Long userId) {
         // convert user to the API representation
         User toBeUpdated = DTOMapper.INSTANCE.convertUserPostDTOtoEntity(userPostDTO);
 
         // update name, username. If null, keep old names
-        userService.updateUser(userID, toBeUpdated.getName(), toBeUpdated.getUsername());
+        userService.updateUser(userId, toBeUpdated);
     }
-
-
 }

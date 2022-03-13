@@ -12,9 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * User Service
@@ -47,49 +45,38 @@ public class UserService {
      * @throws org.springframework.web.server.ResponseStatusException throws 404 if user ID not found
      */
     public User getUser(Long userId) {
-        // create empty User object
-        User userById = null;
 
-        // list all users
-        List<User> allUsers = getUsers();
-
-        // iterate through users and check if the requested ID matches with an existing user ID,
-        // if so we set the User object userById to this user
-        for (User user : allUsers) {
-            if (user.getId().equals(userId)) {
-                userById = user;
-                break;
-            }
-        }
+        Optional<User> userById = userRepository.findById(userId);
 
         // if at this point the User object userById is still empty we throw a ResponseStatusException
         // with status code 404 (not found)
-        if (userById == null) {
+        if (userById.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         }
 
-        return userById;
+        return userById.get();
     }
 
     /**
      * This method updates a User profile
      *
      * @param userID ID of the user
-     * @param newName set new name, if null keep old name
-     * @param newUsername set new username, if null keep old username
+     * @param toBeUpdated // TODO
      */
-    public void updateUser(Long userID, String newName, String newUsername){
+    public void updateUser(Long userID, User toBeUpdated){
         // get user by ID (throws exception if user id does not exist)
         User user = getUser(userID);
 
+
         // if a new name is specified change the old name, otherwise leave as is
-        if (newName != null){
-            user.setName(newName);
+        if (toBeUpdated.getUsername() != null && !toBeUpdated.getUsername().isEmpty()){
+            checkIfUserExists(toBeUpdated);
+            user.setUsername(toBeUpdated.getUsername());
         }
 
         // if a new username is specified change the old username, otherwise leave as is
-        if (newUsername != null){
-            user.setUsername(newUsername);
+        if (toBeUpdated.getBirthday() != null){
+            user.setBirthday(toBeUpdated.getBirthday());
         }
 
         // saves the given entity but data is only persisted in the database once
@@ -127,29 +114,11 @@ public class UserService {
      */
     public User checkCredentials(User userInput) {
         // create empty User object
-        User userByUsername = null;
-
-        // list all users
-        List<User> allUsers = getUsers();
-
-        // iterate through users and check if the requested username matches with an existing username,
-        // if so we check if the passwords match (if not throw exception 403), else throw exception 403
-        for (User user : allUsers) {
-            // check if any user matches the requested username
-            if (Objects.equals(user.getUsername(), userInput.getUsername())) {
-                userByUsername = user;
-                break;
-            }
-        }
+        User userByUsername = userRepository.findByUsernameAndPassword(userInput.getUsername(), userInput.getPassword());
 
         // if userByUsername is still empty, the posted username was invalid, and we throw 403
         if (userByUsername == null) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Wrong username!");
-        }
-
-        // check if passwords match, else throw 403
-        if (!Objects.equals(userByUsername.getPassword(), userInput.getPassword())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Wrong password!");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Wrong username or password!");
         }
 
         // set status to ONLINE
@@ -167,20 +136,22 @@ public class UserService {
      *
      * @param loggedIn logged in user
      */
-    public User logOut(User loggedIn) {
+    public void logOut(User loggedIn) {
         // get user
-        User user = userRepository.findByUsername(loggedIn.getUsername());
+        Optional<User> userById = userRepository.findById(loggedIn.getId());
 
-        // set status to OFFLINE
-        user.setStatus(UserStatus.OFFLINE);
+        if (userById.isPresent()) {
+            User user = userById.get();
 
-        // save status
-        user = userRepository.save(user);
-        userRepository.flush();
+            // set status to OFFLINE
+            user.setStatus(UserStatus.OFFLINE);
 
-        return user;
+            // save status
+            userRepository.save(user);
+            userRepository.flush();
+
+        }
     }
-
 
     /**
      * This is a helper method that will check the uniqueness criteria of the
